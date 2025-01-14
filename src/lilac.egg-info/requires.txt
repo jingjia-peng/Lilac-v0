@@ -1,0 +1,7 @@
+tqdm
+numpy
+tabulate
+jsonpath_ng
+langchain_openai
+langchain_core
+langchain_community
