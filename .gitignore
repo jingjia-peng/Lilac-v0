@@ -1,2 +1,10 @@
 # virtual environments
 lilac/
+
+# cache
+__pycache__/
+src/lilac.egg-info/
+
+# sensitive data
+config/*
+!config/example.yaml
