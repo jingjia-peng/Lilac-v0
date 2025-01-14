@@ -33,8 +33,3 @@ repos:
     - id: isort
       name: isort (pyi)
       types: [pyi]
-
-  - repo: https://github.com/numpy/numpydoc
-    rev: v1.6.0
-    hooks:
-      - id: numpydoc-validation
