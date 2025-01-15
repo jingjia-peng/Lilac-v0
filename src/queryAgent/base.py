@@ -126,48 +126,6 @@ class QueryAgent:
         self.query_chain.reset_api_chain()
         return AgentResponse.TIMEOUT, self.query_chain
 
-    def ablation_main_loop(
-        self,
-        tf_type: str,
-        target_id: str,
-        query_chain,
-        id_schema: str,
-        res_cnst_msg: str,
-        timeout=8,
-    ):
-        """
-        Once obtain some IDs, return success with verification.
-        """
-        if not self.tools:
-            print_error("No tools added to the agent.")
-            return AgentResponse.RESELECT, query_chain
-
-        self.query_chain = query_chain
-        IDschema = id_schema
-        self.messages = self._get_init_msg(tf_type, res_cnst_msg, IDschema)
-
-        for i in range(timeout):
-            print_info(f"########## Round {i+1} ##########")
-            gpt_response = self.agent.invoke(self.messages, tools=self.tools)
-            self._print_gpt_response(gpt_response)
-            self.messages.append(gpt_response["AIMessage"])
-
-            # continue querying the cloud
-            if gpt_response["tool_calls"]:
-                self.run_cloud_query(gpt_response=gpt_response, round=i)
-
-            # ask external API manager to reselect the API group and restart the loop
-            elif "reselect" in gpt_response["chat"]:
-                self.query_chain.reset_api_chain()
-                return AgentResponse.RESELECT, self.query_chain
-
-            # validate the retrieved ID
-            else:
-                return AgentResponse.SUCCESS, self.query_chain
-
-        self.query_chain.reset_api_chain()
-        return AgentResponse.TIMEOUT, self.query_chain
-
     def run_cloud_query(self, gpt_response: dict, round: int):
         """
         Run the cloud query commands given by `gpt_response`.

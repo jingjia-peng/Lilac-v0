@@ -8,3 +8,6 @@ src/lilac.egg-info/
 # sensitive data
 config/*
 !config/example.yaml
+
+# cli docs clone from other repo
+cli-docs/

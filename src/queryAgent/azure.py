@@ -26,22 +26,6 @@ class AzureQueryAgent(QueryAgent):
             timeout=timeout,
         )
 
-    def ablation_main_loop(
-        self, tf_type: str, target_id: str, group_name: str, timeout=8
-    ):
-        self.query_chain = AzureQueryRule(tf_type, target_id)
-        id_schema = self.query_chain.get_query_IDschema(
-            group_name, self.subscription_id
-        )
-        return super().ablation_main_loop(
-            tf_type=tf_type,
-            target_id=target_id,
-            query_chain=self.query_chain,
-            id_schema=id_schema,
-            res_cnst_msg=f"in my resource group {group_name}",
-            timeout=timeout,
-        )
-
     def _get_api_call_list(self, tool_calls: list):
         api_call_list = []
         raw_api_list = []
