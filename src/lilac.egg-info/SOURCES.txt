@@ -1,8 +1,0 @@
-README.md
-pyproject.toml
-setup.cfg
-src/lilac.egg-info/PKG-INFO
-src/lilac.egg-info/SOURCES.txt
-src/lilac.egg-info/dependency_links.txt
-src/lilac.egg-info/requires.txt
-src/lilac.egg-info/top_level.txt
