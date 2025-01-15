@@ -10,4 +10,5 @@ config/*
 !config/example.yaml
 
 # cli docs clone from other repo
-cli-docs/
+cli-docs/*
+!cli-docs/README.md
