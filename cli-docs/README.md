@@ -7,6 +7,7 @@ This directory stores cloud CLI documentation, which the pipeline references to 
 Microsoft Azure provides a comprehensive CLI documentation repository, which we use as a reference for the format required by our pipeline. Follow the steps below to prepare the Azure CLI documentation:
 
 1. Download the Azure CLI documentation repository:
+
    ```bash
    pwd # Lilac-v0/cli-docs
    git clone git@github.com:MicrosoftDocs/azure-docs-cli.git
@@ -16,9 +17,9 @@ Microsoft Azure provides a comprehensive CLI documentation repository, which we 
 
    ```bash
    find azure-docs-cli -mindepth 1 ! -path "azure-docs-cli/latest" ! -path "azure-docs-cli/latest/*" -exec rm -rf {} +
-   mv azure-docs-cli/latest/docs-ref-autogen/* azure-docs-cli/
-   rm -r azure-docs-cli/latest
-   rm azure-docs-cli/TOC.md
+   mv azure-docs-cli/latest/docs-ref-autogen/* azure-cli-docs/
+   rm -r azure-docs-cli
+   rm azure-cli-docs/TOC.md
    ```
 
 After completing these steps, the directory structure should resemble:

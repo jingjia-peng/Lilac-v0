@@ -1,24 +1,26 @@
+import os
+
 from .base import CloudAPIManager
 
 
 class AzureAPIManager(CloudAPIManager):
-    def __init__(self, gpt_tool_limit=128) -> None:
-        super().__init__(gpt_tool_limit)
+    def __init__(self) -> None:
+        super().__init__()
 
-    def load_api_docs(dump=False):
+    def load_api_docs(dump=True):
         super().load_api_docs(
-            root_dir="azure-cli-docs",
+            root_dir=os.path.join("cli-docs", "azure-cli-docs"),
             filter_list=["list", "show", "get"],
             cmd_prefix="az ",
-            api_tree_file="az_api_tree.yml",
-            api_tree_merged_file="az_api_tree_merged.yml",
+            api_tree_file=os.path.join("cache", "az_api_tree.yml"),
+            api_tree_merged_file=os.path.join("cache", "az_api_tree_merged.yml"),
             dump=dump,
         )
 
     def load_cleaned_api_docs(self):
         super().load_cleaned_api_docs(
-            api_tree_merged_file="az_api_tree_merged.yml",
-            clean_dir="azure-cli-docs-cleaned",
+            api_tree_merged_file=os.path("cache", "az_api_tree_merged.yml"),
+            clean_dir=os.path.join("cli-docs", "azure-cli-docs-cleaned"),
             cmd_prefix="az ",
         )
 
@@ -27,6 +29,5 @@ class AzureAPIManager(CloudAPIManager):
             tf_type=tf_type,
             tf_prefix="azurerm_",
             cloud_type="Azure",
-            retrieve_k=retrieve_k,
             failed=failed,
         )

@@ -14,15 +14,15 @@ from utils import Config, print_info
 
 
 class CloudAPIManager:
-    def __init__(self, gpt_tool_limit=128) -> None:
-        self.GPT_TOOL_LIMIT = gpt_tool_limit
+    def __init__(self) -> None:
+        self.GPT_TOOL_LIMIT = Config["GPT_TOOL_LIMIT"]
         self.agent = (
             AzureChatOpenAI(
-                model=Config.model,
-                api_key=Config.api_key,
-                azure_endpoint=Config.azure_endpoint,
-                api_version=Config.api_version,
-                organization=Config.organization,
+                model=Config["model"],
+                api_key=Config["api_key"],
+                azure_endpoint=Config["azure_endpoint"],
+                api_version=Config["api_version"],
+                organization=Config["organization"],
             )
             | StrOutputParser()
         )
@@ -39,25 +39,25 @@ class CloudAPIManager:
         cmd_prefix: str,
         api_tree_file: str,
         api_tree_merged_file: str,
-        dump=False,
+        dump: bool,
     ):
-        self._load_api_yml_docs(
+        self.__load_api_yml_docs(
             root_dir=root_dir, filter_list=filter_list, cmd_prefix=cmd_prefix
         )
-        self._build_cmd_tree(apitree_file=api_tree_file, dump=dump)
-        self._merge_cmds_by_category(
+        self.__build_cmd_tree(apitree_file=api_tree_file, dump=dump)
+        self.__merge_cmds_by_category(
             apitree_merged_file=api_tree_merged_file, dump=dump
         )
-        self._dump_cleaned_api_docs(clean_dir=root_dir + "-cleaned")
+        self.__dump_cleaned_api_docs(clean_dir=root_dir + "-cleaned")
 
-    def _load_api_yml_docs(self, root_dir, filter_list, cmd_prefix):
+    def __load_api_yml_docs(self, root_dir, filter_list, cmd_prefix):
         yml_files = [
             os.path.join(dp, f)
             for dp, dn, fn in os.walk(os.path.expanduser(root_dir))
             for f in fn
         ]
 
-        for file in tqdm(yml_files, desc="Loading API docs"):
+        for file in tqdm(yml_files, desc="Loading API docs from " + root_dir):
             with open(file, "r") as f:
                 content = f.read()
             content = content.replace("\t", "  ")  # avoid yaml load error
@@ -88,7 +88,7 @@ class CloudAPIManager:
 
         print_info(f"Loaded {len(self.cmd_dict)} query APIs from {root_dir}")
 
-    def _build_cmd_tree(self, apitree_file, dump=False):
+    def __build_cmd_tree(self, apitree_file, dump=False):
         for cmd in self.cmd_dict.keys():
             cmd_parts = cmd.split(" ")
             current_level = self.cmd_by_category
@@ -100,13 +100,15 @@ class CloudAPIManager:
                         current_level[part] = {"cmd": []}
                     current_level = current_level[part]
 
-        print_info("Built API tree")
         if dump:
             with open(apitree_file, "w") as f:
                 yaml.dump(self.cmd_by_category, f)
+            print_info("Built API tree and cached at " + apitree_file)
+        else:
+            print_info("Built API tree without caching")
 
-    def _merge_cmds_by_category(self, apitree_merged_file, dump=False):
-        cmd_tree = self._merge_helper(deepcopy(self.cmd_by_category))
+    def __merge_cmds_by_category(self, apitree_merged_file, dump=False):
+        cmd_tree = self.__merge_helper(deepcopy(self.cmd_by_category))
         self.cmd_by_category = deepcopy(cmd_tree)
 
         for key in list(cmd_tree.keys()):
@@ -122,30 +124,33 @@ class CloudAPIManager:
                     self.cmd_by_category.pop(key)
             self.cmd_by_category[key] = cmd_tree[key]["cmd"]
 
-        print_info(
-            f"Merged API tree with {
-                   len(self.cmd_by_category)} categories"
-        )
         if dump:
             with open(apitree_merged_file, "w") as f:
                 yaml.dump(self.cmd_by_category, f)
+            print_info(
+                f"Merged API tree with {len(self.cmd_by_category)} categories and cached at {apitree_merged_file}"
+            )
+        else:
+            print_info(
+                f"Merged API tree with {len(self.cmd_by_category)} categories without caching"
+            )
 
-    def _merge_helper(self, cmd_tree: dict):
+    def __merge_helper(self, cmd_tree: dict):
         for key in cmd_tree:
             if key == "cmd":
                 continue
-            cmd_tree[key] = self._merge_child(cmd_tree[key])
+            cmd_tree[key] = self.__merge_child(cmd_tree[key])
             if len(cmd_tree[key]) > 1:
-                self._merge_helper(cmd_tree[key])
+                self.__merge_helper(cmd_tree[key])
         return cmd_tree
 
-    def _merge_child(self, node: dict):
+    def __merge_child(self, node: dict):
         cnt = len(node["cmd"])
         cmd = deepcopy(node["cmd"])
         for key in node:
             if key == "cmd":
                 continue
-            curcnt, curcmd = self._get_child_data(node[key])
+            curcnt, curcmd = self.__get_child_data(node[key])
             cnt += curcnt
             cmd += curcmd
 
@@ -154,17 +159,17 @@ class CloudAPIManager:
             return {"cmd": cmd}
         return node
 
-    def _get_child_data(self, node: dict):
+    def __get_child_data(self, node: dict):
         cnt = len(node["cmd"])
         cmd = deepcopy(node["cmd"])
         for key in node:
             if key != "cmd":
-                curcnt, curcmd = self._get_child_data(node[key])
+                curcnt, curcmd = self.__get_child_data(node[key])
                 cnt += curcnt
                 cmd += curcmd
         return cnt, cmd
 
-    def _dump_cleaned_api_docs(self, clean_dir):
+    def __dump_cleaned_api_docs(self, clean_dir):
         vsfiles = []
         for category, cmds in self.cmd_by_category.items():
             cmds_info = {
@@ -184,9 +189,11 @@ class CloudAPIManager:
             with open(file, "w") as f:
                 yaml.dump(cmds_info, f)
             vsfiles.extend(TextLoader(file).load())
+        print_info(f"Dumped cleaned API docs to {clean_dir}")
 
         self.vectorstore = FAISS.from_documents(vsfiles, OpenAIEmbeddings())
         self.vectorstore.save_local(clean_dir + ".faiss")
+        print_info(f"Cached vectorstore at {clean_dir}.faiss")
 
     def load_cleaned_api_docs(self, api_tree_merged_file, clean_dir, cmd_prefix):
         """
@@ -225,7 +232,7 @@ class CloudAPIManager:
         print_info(f"Loaded {len(self.cmd_dict)} query APIs from {clean_dir}")
 
     def select_category_by_tftype(
-        self, tf_type: str, tf_prefix: str, cloud_type: str, retrieve_k=10, failed=[]
+        self, tf_type: str, tf_prefix: str, cloud_type: str, failed=[]
     ):
         """
         Given a Terraform type, select the API category that should contains cloud query commands for this type
@@ -233,12 +240,15 @@ class CloudAPIManager:
         assert (
             self.vectorstore
         ), "Please load the API docs by calling `load_api_docs` or `load_cleaned_api_docs` first"
-        tf_type = tf_type[len(tf_prefix) :]
         print_info(f"Selecting category for Terraform type: {tf_type}")
+        tf_type = tf_type[len(tf_prefix) :]
 
-        doc_retriever = self.vectorstore.as_retriever(search_kwargs={"k": retrieve_k})
-        retrieve_query = f"Find an API to list all IDs of Terraform `{
-            tf_type}` resource type"
+        doc_retriever = self.vectorstore.as_retriever(
+            search_kwargs={"k": Config["select_cli_category_retrieve_k"]}
+        )
+        retrieve_query = (
+            f"Find an API to list all IDs of Terraform `{tf_type}` resource type"
+        )
         docs = doc_retriever.invoke(retrieve_query)
 
         category_info = {}
@@ -250,13 +260,13 @@ class CloudAPIManager:
             category_info[content["category"]] = content["summary"]
             print(doc.metadata["source"].split("/")[-1])
 
-        select_query = self._get_select_message(tf_type, category_info, cloud_type)
+        select_query = self.__get_select_message(tf_type, category_info, cloud_type)
 
         selected_category = self.agent.invoke(select_query).strip('"')
         print_info(f"Selected category: {selected_category}")
         return selected_category
 
-    def _get_select_message(
+    def __get_select_message(
         self, tf_type: str, category_info: dict, cloud_type="Azure"
     ):
         return [
@@ -279,18 +289,3 @@ class CloudAPIManager:
 
     def get_cmd_by_category(self, category):
         return self.cmd_by_category[category]
-
-
-if __name__ == "__main__":
-    cloud_api_manager = CloudAPIManager()
-    cloud_api_manager.load_api_docs(
-        "google-compute-cli-docs",
-        filter_list=["list", "describe"],
-        cmd_prefix="gcloud ",
-        dump=True,
-    )
-    cloud_api_manager.select_category_by_tftype(
-        "google_compute_disk_resource_policy_attachment",
-        tf_prefix="google_compute_",
-        cloud_type="Google",
-    )

@@ -4,10 +4,12 @@ lilac/
 # cache
 __pycache__/
 src/lilac.egg-info/
+.vscode/
+.ruff_cache/
+cache/*
 
 # sensitive data
-config/*
-!config/example.yaml
+config/api-config.yml
 
 # cli docs clone from other repo
 cli-docs/*

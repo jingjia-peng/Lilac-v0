@@ -146,11 +146,11 @@ def generate_unit_test(
     """
     agent = (
         AzureChatOpenAI(
-            model=Config.model,
-            api_key=Config.api_key,
-            azure_endpoint=Config.azure_endpoint,
-            api_version=Config.api_version,
-            organization=Config.organization,
+            model=Config["model"],
+            api_key=Config["api_key"],
+            azure_endpoint=Config["azure_endpoint"],
+            api_version=Config["api_version"],
+            organization=Config["organization"],
         )
         | StrOutputParser()
     )
