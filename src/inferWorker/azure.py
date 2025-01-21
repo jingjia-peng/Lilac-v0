@@ -4,7 +4,7 @@ import subprocess
 
 from jsonpath_ng import parse
 
-from utils import print_info, print_cmd_result
+from utils import Config, print_info, print_cmd_result
 from inferRule import (
     InferRule,
     AzureIDType,
@@ -18,8 +18,10 @@ from .base import InferWorker, LiftedInstance
 
 
 class AzureInferWorker(InferWorker):
-    def __init__(self, subscription_id: str, group_name: str, location="East US"):
-        self.subscription_id = subscription_id
+    def __init__(self, group_name: str, location="East US"):
+        self.subscription_id = Config["subscription_id"]
+        if not self.subscription_id:
+            raise ValueError("subscription_id is not set in config")
         self.group_name = group_name
         self.location = location
         super().__init__(infer_rule=InferRule(AzureResponseInfo))
@@ -30,21 +32,21 @@ class AzureInferWorker(InferWorker):
             self.infer_rule.add_query_rule(query_rule)
         if verbose:
             print_info(self.infer_rule)
-            self.logger.warning(self.infer_rule)
+            self.logger.info(self.infer_rule)
 
     def _print_init_lifting(self):
         print_info(
             f"Start lifting inference in resource group {
                    self.group_name}..."
         )
-        self.logger.warning(
+        self.logger.info(
             f"Start lifting inference in resource group {
                             self.group_name}..."
         )
 
     def _populate_top_api_queue(self, api_queue):
         print_info(f"Running command: az resource list -g {self.group_name}")
-        self.logger.warning(f"Running command: az resource list -g {self.group_name}")
+        self.logger.info(f"Running command: az resource list -g {self.group_name}")
         result = subprocess.run(
             f"az resource list -g {self.group_name}",
             stdout=subprocess.PIPE,

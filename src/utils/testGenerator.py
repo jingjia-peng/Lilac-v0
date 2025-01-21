@@ -5,11 +5,8 @@ from collections import namedtuple
 
 import pydot
 import networkx as nx
-from langchain_openai import AzureChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.output_parsers import StrOutputParser
 
-from utils import Config, print_info
+from utils import print_info
 
 PartialOrder = namedtuple("PartialOrder", ["src", "dest"])
 
@@ -131,86 +128,3 @@ def generate_incremental_tests(basedir: str, verbose=False):
         (os.path.join(testdir, f"test_{i}"), total_orders[len(total_orders) - 1 - i])
         for i in range(len(total_orders))
     ]
-
-
-def generate_unit_test(
-    tf_type: str,
-    cloud: str,
-    res_cnst_msg: str,
-    ref_file_path: str | None,
-    result_dir: str,
-    timeout=5,
-) -> bool:
-    """
-    Generate unit tests for the given tf_type.
-    If a reference file is provided, generate unit tests based on the reference file.
-    Return True if the generated Terraform can be correctly deployed and used for later test.
-    """
-    agent = (
-        AzureChatOpenAI(
-            model=Config["model"],
-            api_key=Config["api_key"],
-            azure_endpoint=Config["azure_endpoint"],
-            api_version=Config["api_version"],
-            organization=Config["organization"],
-        )
-        | StrOutputParser()
-    )
-
-    messages = [
-        SystemMessage(
-            f"You are a useful assistance of {cloud} Terraform. \
-        You are asked to generate a **minimum** Terraform program that contains {tf_type} {res_cnst_msg}\
-        and can be correctly deployed. Please only return the code without any comment."
-        ),
-    ]
-    if ref_file_path:
-        with open(ref_file_path, "r") as f:
-            ref_content = f.read()
-        messages.append(
-            HumanMessage(
-                "Here is a reference program which might not be correct. \
-            Common errors include missing provider blocks or incorrect resource attributes.\n "
-                + ref_content
-            )
-        )
-
-    result_file = os.path.join(result_dir, f"{tf_type}.tf")
-    success = False
-
-    for _ in range(timeout):
-        response = agent.invoke(messages)
-
-        lines = response.split("\n")
-        start = False
-        with open(result_file, "w") as f:
-            for line in lines:
-                if line.startswith("```") and not start:
-                    start = True
-                elif line.startswith("```") and start:
-                    break
-                elif start:
-                    f.write(line + "\n")
-
-        subprocess.run("terraform init", shell=True, cwd=result_dir)
-        result = subprocess.run(
-            "terraform plan",
-            shell=True,
-            cwd=result_dir,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-
-        if result.returncode == 0:
-            success = True
-            break
-
-        print(result.stderr)
-        messages.append(
-            HumanMessage(
-                "Your generated Terraform fails to plan with the following error:\n"
-                + result.stderr
-            )
-        )
-
-    return success

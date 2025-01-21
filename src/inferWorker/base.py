@@ -45,7 +45,7 @@ class InferWorker:
         # search from top-level resources in the resource group
         cloud_types = self._populate_top_api_queue(api_queue)
         print_info(f"Top-level resources types: {cloud_types}")
-        self.logger.warning(f"Top-level resources types: {cloud_types}")
+        self.logger.info(f"Top-level resources types: {cloud_types}")
 
         while api_queue:
             api = api_queue.pop(0)
@@ -61,7 +61,7 @@ class InferWorker:
             # run the API call and analyze the response
             full_api = self._get_full_api_call(api, arg_map)
             print_info(f"Running command: {full_api}")
-            self.logger.warning(f"Running command: {full_api}")
+            self.logger.info(f"Running command: {full_api}")
             result = subprocess.run(
                 full_api, stdout=subprocess.PIPE, shell=True, text=True
             )
@@ -128,7 +128,7 @@ class InferWorker:
             self.import_instances, headers=["TF Type", "Name", "ID"], tablefmt="pretty"
         )
         print_info(table)
-        self.logger.warning(table)
+        self.logger.info(table)
 
     def _post_process_instances(self):
         tftypes = defaultdict(set)

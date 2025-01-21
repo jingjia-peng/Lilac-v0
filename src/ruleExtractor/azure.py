@@ -3,13 +3,7 @@ import json
 import shutil
 import subprocess
 
-from utils import (
-    Config,
-    print_info,
-    print_error,
-    generate_unit_test,
-    generate_incremental_tests,
-)
+from utils import Config, print_info, print_error, generate_incremental_tests
 from queryAgent import AgentResponse, AzureQueryAgent
 from cloudAPImanager import AzureAPIManager
 
@@ -18,51 +12,16 @@ from .base import RuleExtractor
 
 class AzureRuleExtractor(RuleExtractor):
     def __init__(self):
-        self.subscription_id = Config["subscription_id"]
-        if self.subscription_id is None:
-            raise ValueError("Azure subscription_id not set in global-config.yml")
         super().__init__(
-            query_agent=AzureQueryAgent(self.subscription_id),
+            query_agent=AzureQueryAgent(),
             api_manager=AzureAPIManager(),
         )
 
-    def schedule_tests(self, test_basedir="azure-test", ref_basedir="azure-ref"):
-        """
-        Schedule tests for Azure in following steps:
-        1. read all reference terraform test files in ref_basedir
-        2. for each reference file, try to generate runable unit test in test_basedir
-        3. run the generated unit test
-        """
-        ref_files = [
-            os.path.join(ref_basedir, f)
-            for f in os.listdir(ref_basedir)
-            if f.endswith(".tf")
-        ]
-        ref_files = sorted(ref_files)
-        for i, ref_file in enumerate(ref_files):
-            tf_type = os.path.basename(ref_file).split(".")[0]
-            test_dir = os.path.join(test_basedir, tf_type)
-            os.makedirs(test_dir, exist_ok=True)
-
-            print_info(f"Generating unit test for {tf_type}")
-            self.logger.warning(f"Generating unit test for {tf_type}")
-            ok = generate_unit_test(
-                tf_type=tf_type,
-                cloud="Azure",
-                ref_file_path=ref_file,
-                result_dir=test_dir,
-                res_cnst_msg=f"in my resource group lilac-{i}",
-            )
-            if not ok:
-                print_error(f"Failed to generate unit test for {tf_type}")
-                self.logger.error(f"Failed to generate unit test for {tf_type}")
-                continue
-
-            self.run_unit_test(test_dir)
-
-    def run_unit_test(self, testdir: str, cleanup=True):
+    def run_unit_test(self, testdir: str, cleanup):
         test_infos = generate_incremental_tests(testdir, verbose=True)
         agent_retry = Config["query_loop_max_retry"]
+        print_info(f"Running incremental test in {testdir}")
+        self.logger.info(f"Running incremental test in {testdir}")
 
         try:
             for i, (test_path, test_resource) in enumerate(test_infos):
@@ -70,9 +29,7 @@ class AzureRuleExtractor(RuleExtractor):
                     f"Running {test_path} with resource {
                            test_resource}"
                 )
-                self.logger.warning(
-                    f"Running {test_path} with resource {test_resource}"
-                )
+                self.logger.info(f"Running {test_path} with resource {test_resource}")
 
                 # prepare terraform environment
                 if i == 0:
@@ -113,7 +70,7 @@ class AzureRuleExtractor(RuleExtractor):
 
                 # resource group is guaranteed to be the first resource
                 if i == 0:
-                    group_name = self._extract_group_name(tfstate)
+                    group_name = self.__extract_group_name(tfstate)
                     assert (
                         group_name
                     ), "Resource group is not the first resource in testcase"
@@ -190,7 +147,7 @@ class AzureRuleExtractor(RuleExtractor):
             if cleanup:
                 self.cleanup(testdir, test_path)
 
-    def _extract_group_name(self, tfstate: dict):
+    def __extract_group_name(self, tfstate: dict):
         for r in tfstate["resources"]:
             if r["type"] == "azurerm_resource_group":
                 id = r["instances"][0]["attributes"]["id"]

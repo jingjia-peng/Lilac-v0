@@ -1,13 +1,18 @@
+from utils import Config
 from queryRule.google import GoogleQueryRule
 
 from .base import QueryAgent
 
 
 class GoogleQueryAgent(QueryAgent):
-    def __init__(self, project: str, region: str):
+    def __init__(self):
         super().__init__()
-        self.project = project
-        self.region = region
+        self.project = Config["project"]
+        if self.project is None:
+            raise ValueError("Google project not set in global-config.yml")
+        self.region = Config["region"]
+        if self.region is None:
+            raise ValueError("Google region not set in global-config.yml")
         self.cloud_type = "Google"
 
     def add_tools(self, cmds: list, cmd_tool_dict: dict, category: str):

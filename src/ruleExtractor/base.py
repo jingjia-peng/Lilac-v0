@@ -24,10 +24,14 @@ class RuleExtractor:
         # suppress logging
         self.logger.disabled = True
 
-    def schedule_tests(self):
-        raise NotImplementedError
+    def schedule_tests(self, test_dir_list: list, cleanup=True):
+        """
+        Run all tests in `test_dir_list`
+        """
+        for test_dir in test_dir_list:
+            self.run_unit_test(test_dir, cleanup)
 
-    def run_unit_test(self):
+    def run_unit_test(self, cleanup):
         """
         Run incremental test in `testdir`
         """

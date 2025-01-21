@@ -28,7 +28,7 @@ class GoogleInferWorker(InferWorker):
 
     def _print_init_lifting(self):
         print_info(f"Start lifting inference in project {self.project_id}...")
-        self.logger.warning(
+        self.logger.info(
             f"Start lifting inference in project {
                             self.project_id}..."
         )
@@ -39,14 +39,14 @@ class GoogleInferWorker(InferWorker):
             self.infer_rule.add_query_rule(query_rule)
         if verbose:
             print_info(self.infer_rule)
-            self.logger.warning(self.infer_rule)
+            self.logger.info(self.infer_rule)
 
     def _populate_top_api_queue(self, api_queue):
         print_info(
             f'Running command: gcloud asset search-all-resources --project="{
                    self.project_id}" --format json'
         )
-        self.logger.warning(
+        self.logger.info(
             f'Running command: gcloud asset search-all-resources --project="{self.project_id}" --format json'
         )
         result = subprocess.run(
