@@ -7,9 +7,9 @@ from .base import QueryAgent
 class AzureQueryAgent(QueryAgent):
     def __init__(self):
         super().__init__()
-        self.subscription_id = Config["subscription_id"]
+        self.subscription_id = Config["azure_subscription_id"]
         if self.subscription_id is None:
-            raise ValueError("Azure subscription_id not set in global-config.yml")
+            raise ValueError("Azure azure_subscription_id not set in global-config.yml")
         self.cloud_type = "Azure"
 
     def add_tools(self, cmds: list, cmd_tool_dict: dict, category: str):

@@ -86,7 +86,7 @@ class InferWorker:
         for tftype in tftypes:
             self._infer_tfinstance(tftype)
 
-        self._post_process_instances()
+        self.__post_process_instances()
 
     def _print_init_lifting(self):
         raise NotImplementedError
@@ -130,7 +130,7 @@ class InferWorker:
         print_info(table)
         self.logger.info(table)
 
-    def _post_process_instances(self):
+    def __post_process_instances(self):
         tftypes = defaultdict(set)
         for instance in self.lifted_instances:
             tftypes[instance.tftype].add(instance.id)

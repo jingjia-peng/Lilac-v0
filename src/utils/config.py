@@ -25,10 +25,22 @@ Config = {
     "query_loop_max_iter": global_config["query_loop_max_iter"],
     "query_loop_max_retry": global_config["query_loop_max_retry"],
     # Azure cloud test parameters
-    "subscription_id": (
-        global_config["subscription_id"] if "subscription_id" in global_config else None
+    "azure_subscription_id": (
+        global_config["azure_subscription_id"]
+        if "azure_subscription_id" in global_config
+        else None
+    ),
+    "azure_location": (
+        global_config["azure_location"] if "azure_location" in global_config else None
     ),
     # google cloud test parameters
-    "project": global_config["project"] if "project" in global_config else None,
-    "region": global_config["region"] if "region" in global_config else None,
+    "google_project": (
+        global_config["google_project"] if "google_project" in global_config else None
+    ),
+    "google_region": (
+        global_config["google_region"] if "google_region" in global_config else None
+    ),
+    "google_zone": (
+        global_config["google_zone"] if "google_zone" in global_config else None
+    ),
 }

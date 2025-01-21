@@ -5,8 +5,10 @@ query_loop_max_iter: 8
 query_loop_max_retry: 5
 
 # Azure Account Info: replace with your own
-subscription_id: 1b7414a3-b034-4f7b-9708-357f1ddecd7a
+azure_subscription_id: 1b7414a3-b034-4f7b-9708-357f1ddecd7a
+azure_location: East US
 
 # Google Account Info: replace with your own
-project: iac-lifting-test
-region: us-central1
+google_project: iac-lifting-test
+google_region: us-central1
+google_zone: us-central1-a

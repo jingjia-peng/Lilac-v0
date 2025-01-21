@@ -18,12 +18,14 @@ from .base import InferWorker, LiftedInstance
 
 
 class AzureInferWorker(InferWorker):
-    def __init__(self, group_name: str, location="East US"):
-        self.subscription_id = Config["subscription_id"]
+    def __init__(self, group_name: str):
+        self.subscription_id = Config["azure_subscription_id"]
         if not self.subscription_id:
-            raise ValueError("subscription_id is not set in config")
+            raise ValueError("azure_subscription_id is not set in global-config.yml")
+        self.location = Config["azure_location"]
+        if not self.location:
+            raise ValueError("azure_location is not set in global-config.yml")
         self.group_name = group_name
-        self.location = location
         super().__init__(infer_rule=InferRule(AzureResponseInfo))
 
     def prepare_infer_rules(self, query_rule_paths: list):

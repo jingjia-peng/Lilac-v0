@@ -4,7 +4,7 @@ import subprocess
 
 from jsonpath_ng import parse
 
-from utils import print_info, print_cmd_result
+from utils import Config, print_info, print_cmd_result
 from inferRule import (
     InferRule,
     InferAPIArg,
@@ -20,17 +20,23 @@ GOOGLE_SELFLINK_PREFIX = "https://www.googleapis.com/"
 
 
 class GoogleInferWorker(InferWorker):
-    def __init__(self, project_id: str, region="us-central1", zone="us-central1-a"):
-        self.project_id = project_id
-        self.region = region
-        self.zone = zone
+    def __init__(self):
+        self.project = Config["google_project"]
+        if not self.project:
+            raise ValueError("google_project is not set in global-config.yml")
+        self.region = Config["google_region"]
+        if not self.region:
+            raise ValueError("google_region is not set in global-config.yml")
+        self.zone = Config["google_zone"]
+        if not self.zone:
+            raise ValueError("google_zone is not set in global-config.yml")
         super().__init__(infer_rule=InferRule(GoogleResponseInfo))
 
     def _print_init_lifting(self):
-        print_info(f"Start lifting inference in project {self.project_id}...")
+        print_info(f"Start lifting inference in project {self.project}...")
         self.logger.info(
             f"Start lifting inference in project {
-                            self.project_id}..."
+                            self.project}..."
         )
 
     def prepare_infer_rules(self, query_rule_paths: list):
@@ -43,13 +49,13 @@ class GoogleInferWorker(InferWorker):
     def _populate_top_api_queue(self, api_queue):
         print_info(
             f'Running command: gcloud asset search-all-resources --project="{
-                   self.project_id}" --format json'
+                   self.project}" --format json'
         )
         self.logger.info(
-            f'Running command: gcloud asset search-all-resources --project="{self.project_id}" --format json'
+            f'Running command: gcloud asset search-all-resources --project="{self.project}" --format json'
         )
         result = subprocess.run(
-            f'gcloud asset search-all-resources --project="{self.project_id}" --format json',
+            f'gcloud asset search-all-resources --project="{self.project}" --format json',
             stdout=subprocess.PIPE,
             shell=True,
             text=True,
@@ -123,7 +129,7 @@ class GoogleInferWorker(InferWorker):
                 self.lifted_instances.append(LiftedInstance(tftype, id))
 
         else:
-            ids = [self.project_id]
+            ids = [self.project]
             comp_num = len(tfid_components)
             for i in range(comp_num):
                 running_ids = []
@@ -138,7 +144,7 @@ class GoogleInferWorker(InferWorker):
 
     def _save_instance_topo(self, path: str):
         content = f"""provider "google" {{
-    project     = "{self.project_id}"
+    project     = "{self.project}"
     region      = "{self.region}"
 }}
 """
@@ -154,7 +160,7 @@ resource "{instance.tftype}" "{instance.name}" {{
 
     def _save_instance_imported(self, output_path: str, buffer_dir="cache"):
         import_file = f"""provider "google" {{
-    project     = "{self.project_id}"
+    project     = "{self.project}"
     region      = "{self.region}"
 }}
 """
@@ -195,7 +201,7 @@ import {{
             content = f.read()
         content = (
             f"""provider "google" {{
-    project     = "{self.project_id}"
+    project     = "{self.project}"
     region      = "{self.region}"
 }}
 """

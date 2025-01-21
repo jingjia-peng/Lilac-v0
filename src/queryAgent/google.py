@@ -7,10 +7,10 @@ from .base import QueryAgent
 class GoogleQueryAgent(QueryAgent):
     def __init__(self):
         super().__init__()
-        self.project = Config["project"]
+        self.project = Config["google_project"]
         if self.project is None:
             raise ValueError("Google project not set in global-config.yml")
-        self.region = Config["region"]
+        self.region = Config["google_region"]
         if self.region is None:
             raise ValueError("Google region not set in global-config.yml")
         self.cloud_type = "Google"
