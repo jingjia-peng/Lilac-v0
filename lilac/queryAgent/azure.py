@@ -1,5 +1,5 @@
-from utils import Config
-from queryRule import AzureQueryRule
+from lilac.utils import Config
+from lilac.queryRule import AzureQueryRule
 
 from .base import QueryAgent
 

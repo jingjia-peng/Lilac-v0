@@ -2,16 +2,17 @@ import os
 import json
 import subprocess
 
-from utils import Config, print_info, print_cmd_result
-from inferRule import (
+from jsonpath_ng import parse
+
+from lilac.utils import Config, print_info, print_cmd_result
+from lilac.inferRule import (
     InferRule,
     InferAPIArg,
     GoogleIDType,
     GoogleIDSchema,
     GoogleResponseInfo,
 )
-from queryRule import GoogleQueryRule
-from jsonpath_ng import parse
+from lilac.queryRule import GoogleQueryRule
 
 from .base import InferWorker, LiftedInstance
 

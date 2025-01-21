@@ -3,9 +3,9 @@ import json
 import shutil
 import subprocess
 
-from utils import Config, print_info, print_error, generate_incremental_tests
-from queryAgent import AgentResponse, GoogleQueryAgent
-from cloudAPImanager import GoogleAPIManager
+from lilac.utils import Config, print_info, print_error, generate_incremental_tests
+from lilac.queryAgent import AgentResponse, GoogleQueryAgent
+from lilac.cloudAPImanager import GoogleAPIManager
 
 from .base import RuleExtractor
 

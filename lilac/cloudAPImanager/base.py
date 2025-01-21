@@ -4,12 +4,13 @@ from copy import deepcopy
 
 import yaml
 from tqdm import tqdm
-from utils import Config, print_info
 from langchain_openai import AzureChatOpenAI, OpenAIEmbeddings
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import TextLoader
+
+from lilac.utils import Config, print_info
 
 
 class CloudAPIManager:

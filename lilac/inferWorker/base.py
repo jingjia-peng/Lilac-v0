@@ -3,8 +3,9 @@ import logging
 import subprocess
 from collections import namedtuple, defaultdict
 
-from utils import print_info
 from tabulate import tabulate
+
+from lilac.utils import print_info
 
 LiftedInstance = namedtuple("LiftedInstance", ["tftype", "id"])
 ImportInstance = namedtuple("ImportInstance", ["tftype", "name", "id"])

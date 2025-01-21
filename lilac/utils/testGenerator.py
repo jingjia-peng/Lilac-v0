@@ -5,7 +5,8 @@ from collections import namedtuple
 
 import pydot
 import networkx as nx
-from utils import print_info
+
+from lilac.utils import print_info
 
 PartialOrder = namedtuple("PartialOrder", ["src", "dest"])
 

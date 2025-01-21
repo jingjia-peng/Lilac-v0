@@ -2,16 +2,17 @@ import os
 import json
 import subprocess
 
-from utils import Config, print_info, print_cmd_result
-from inferRule import (
+from jsonpath_ng import parse
+
+from lilac.utils import Config, print_info, print_cmd_result
+from lilac.inferRule import (
     InferRule,
     AzureIDType,
     InferAPIArg,
     AzureIDSchema,
     AzureResponseInfo,
 )
-from queryRule import AzureQueryRule
-from jsonpath_ng import parse
+from lilac.queryRule import AzureQueryRule
 
 from .base import InferWorker, LiftedInstance
 

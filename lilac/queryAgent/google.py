@@ -1,5 +1,5 @@
-from utils import Config
-from queryRule.google import GoogleQueryRule
+from lilac.utils import Config
+from lilac.queryRule import GoogleQueryRule
 
 from .base import QueryAgent
 

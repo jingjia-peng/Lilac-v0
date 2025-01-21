@@ -2,7 +2,8 @@ import re
 from collections import namedtuple, defaultdict
 
 from tabulate import tabulate
-from queryRule import QueryRule
+
+from lilac.queryRule import QueryRule
 
 InferAPIArg = namedtuple("InferAPIArg", ["api_call", "arg_name"])
 
