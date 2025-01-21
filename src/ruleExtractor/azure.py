@@ -3,7 +3,13 @@ import json
 import shutil
 import subprocess
 
-from utils import print_info, print_error, testGenerator
+from utils import (
+    Config,
+    print_info,
+    print_error,
+    generate_unit_test,
+    generate_incremental_tests,
+)
 from queryAgent import AgentResponse, AzureQueryAgent
 from cloudAPImanager import AzureAPIManager
 
@@ -11,14 +17,22 @@ from .base import RuleExtractor
 
 
 class AzureRuleExtractor(RuleExtractor):
-    def __init__(self, subscription_id="1b7414a3-b034-4f7b-9708-357f1ddecd7a"):
-        self.subscription_id = subscription_id
+    def __init__(self):
+        self.subscription_id = Config["subscription_id"]
+        if self.subscription_id is None:
+            raise ValueError("Azure subscription_id not set in global-config.yml")
         super().__init__(
             query_agent=AzureQueryAgent(self.subscription_id),
             api_manager=AzureAPIManager(),
         )
 
     def schedule_tests(self, test_basedir="azure-test", ref_basedir="azure-ref"):
+        """
+        Schedule tests for Azure in following steps:
+        1. read all reference terraform test files in ref_basedir
+        2. for each reference file, try to generate runable unit test in test_basedir
+        3. run the generated unit test
+        """
         ref_files = [
             os.path.join(ref_basedir, f)
             for f in os.listdir(ref_basedir)
@@ -32,7 +46,7 @@ class AzureRuleExtractor(RuleExtractor):
 
             print_info(f"Generating unit test for {tf_type}")
             self.logger.warning(f"Generating unit test for {tf_type}")
-            ok = testGenerator.generate_unit_test(
+            ok = generate_unit_test(
                 tf_type=tf_type,
                 cloud="Azure",
                 ref_file_path=ref_file,
@@ -46,8 +60,9 @@ class AzureRuleExtractor(RuleExtractor):
 
             self.run_unit_test(test_dir)
 
-    def run_unit_test(self, testdir: str, retrieve_k=10, agent_retry=5, cleanup=True):
-        test_infos = testGenerator.generate_incremental_tests(testdir, verbose=True)
+    def run_unit_test(self, testdir: str, cleanup=True):
+        test_infos = generate_incremental_tests(testdir, verbose=True)
+        agent_retry = Config["query_loop_max_retry"]
 
         try:
             for i, (test_path, test_resource) in enumerate(test_infos):
@@ -88,7 +103,7 @@ class AzureRuleExtractor(RuleExtractor):
                         "terraform apply -auto-approve", cwd=test_path, shell=True
                     )
                 except subprocess.CalledProcessError:
-                    print_error("Terraform apply failed for", test_path)
+                    print_error(f"Terraform apply failed for {test_path}")
                     self.logger.error(f"Terraform apply failed for {test_path}")
                     break
 
@@ -118,7 +133,7 @@ class AzureRuleExtractor(RuleExtractor):
                 while True:
                     self.queryAgent.reset()
                     category = self.cloudAPImanager.select_category_by_tftype(
-                        tf_type, failed=failed_category, retrieve_k=retrieve_k
+                        tf_type, failed=failed_category
                     )
                     cmds = self.cloudAPImanager.get_cmd_by_category(category)
                     self.queryAgent.add_tools(cmds, self.cmd_tool_dict, category)
@@ -129,9 +144,8 @@ class AzureRuleExtractor(RuleExtractor):
                         )
                     except Exception as e:
                         print_error(
-                            "Exception caught in queryAgent main_loop:",
-                            type(e).__name__,
-                            e,
+                            f"Exception caught in queryAgent main_loop: {
+                                          type(e).__name__} {e}"
                         )
                         self.logger.error(
                             f"Exception caught in queryAgent main_loop: {
@@ -148,11 +162,12 @@ class AzureRuleExtractor(RuleExtractor):
                     print_error(agent_response)
                     if agent_response == AgentResponse.RESELECT:
                         failed_category.append(category)
-                        if len(failed_category) == retrieve_k:
+                        if (
+                            len(failed_category)
+                            == Config["select_cli_category_retrieve_k"]
+                        ):
                             print_error(
-                                "No suitable category found for",
-                                test_resource,
-                                ", skip this test",
+                                f"No suitable category found for {test_resource}, skip this test",
                             )
                             query_chain.dump(testdir, test_resource)
                             break
@@ -162,16 +177,14 @@ class AzureRuleExtractor(RuleExtractor):
                         agent_retry -= 1
                         if agent_retry <= 0:
                             print_error(
-                                "Retry limit reached for",
-                                test_resource,
-                                ", skip this test",
+                                f"Retry limit reached for {test_resource}, skip this test"
                             )
                             query_chain.dump(testdir, test_resource)
                             break
                         continue
 
         except Exception as e:
-            print_error("Exception caught:", type(e).__name__, e)
+            print_error(f"Exception caught: {type(e).__name__} {e}")
             self.logger.error(f"Exception caught: {type(e).__name__} {e}")
         finally:
             if cleanup:

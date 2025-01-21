@@ -12,7 +12,7 @@ class AzureQueryAgent(QueryAgent):
     def add_tools(self, cmds: list, cmd_tool_dict: dict, category: str):
         super().add_tools(cmds, cmd_tool_dict, "az " + category)
 
-    def main_loop(self, tf_type: str, target_id: str, group_name: str, timeout=8):
+    def main_loop(self, tf_type: str, target_id: str, group_name: str):
         self.query_chain = AzureQueryRule(tf_type, target_id)
         id_schema = self.query_chain.get_query_IDschema(
             group_name, self.subscription_id
@@ -23,10 +23,9 @@ class AzureQueryAgent(QueryAgent):
             query_chain=self.query_chain,
             id_schema=id_schema,
             res_cnst_msg=f"in my resource group {group_name}",
-            timeout=timeout,
         )
 
-    def _get_api_call_list(self, tool_calls: list):
+    def get_api_call_list(self, tool_calls: list):
         api_call_list = []
         raw_api_list = []
         for tool_call in tool_calls:
@@ -44,7 +43,7 @@ class AzureQueryAgent(QueryAgent):
                 return id
         return None
 
-    def _import_content(self, tf_type: str, id: str):
+    def import_content(self, tf_type: str, id: str):
         return f"""provider "azurerm" {{
     features {{}}
     subscription_id = "{self.subscription_id}"

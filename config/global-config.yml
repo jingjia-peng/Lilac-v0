@@ -1,2 +1,12 @@
+GPT_MSG_MAXLEN: 1048576
 GPT_TOOL_LIMIT: 128
-select_cli_category_retrieve_k: 10
+select_cli_category_retrieve_k: 15
+query_loop_max_iter: 8
+query_loop_max_retry: 5
+
+# Azure Account Info: replace with your own
+subscription_id: 1b7414a3-b034-4f7b-9708-357f1ddecd7a
+
+# Google Account Info: replace with your own
+project: iac-lifting-test
+region: us-central1

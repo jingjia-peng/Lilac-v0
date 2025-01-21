@@ -89,6 +89,8 @@ def generate_incremental_tests(basedir: str, verbose=False):
     Reference: https://github.com/minamijoyo/hcledit
     """
     testdir = os.path.join(basedir, "incremental_test")
+    # clean the old testdir
+    shutil.rmtree(testdir, ignore_errors=True)
     os.makedirs(testdir, exist_ok=True)
 
     partial_orders = get_partial_orders(basedir)

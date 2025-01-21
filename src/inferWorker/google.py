@@ -153,7 +153,7 @@ resource "{instance.tftype}" "{instance.name}" {{
         with open(path, "w") as f:
             f.write(content)
 
-    def _save_instance_imported(self, output_path: str, buffer_dir="."):
+    def _save_instance_imported(self, output_path: str, buffer_dir="cache"):
         import_file = f"""provider "google" {{
     project     = "{self.project_id}"
     region      = "{self.region}"

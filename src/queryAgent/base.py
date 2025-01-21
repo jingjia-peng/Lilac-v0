@@ -9,8 +9,6 @@ from langchain_core.output_parsers.openai_tools import JsonOutputToolsParser
 
 from utils import Config, print_info, print_error, print_cmd_result
 
-GPT_MGS_MAXLEN = 1048576
-
 
 class AgentResponse(Enum):
     SUCCESS = 0
@@ -84,7 +82,6 @@ class QueryAgent:
         query_chain,
         id_schema: str,
         res_cnst_msg: str,
-        timeout=8,
     ):
         if not self.tools:
             print_error("No tools added to the agent.")
@@ -92,12 +89,12 @@ class QueryAgent:
 
         self.query_chain = query_chain
         IDschema = id_schema
-        self.messages = self._get_init_msg(tf_type, res_cnst_msg, IDschema)
+        self.messages = self.__get_init_msg(tf_type, res_cnst_msg, IDschema)
 
-        for i in range(timeout):
+        for i in range(Config["query_loop_max_iter"]):
             print_info(f"########## Round {i+1} ##########")
             gpt_response = self.agent.invoke(self.messages, tools=self.tools)
-            self._print_gpt_response(gpt_response)
+            self.__print_gpt_response(gpt_response)
             self.messages.append(gpt_response["AIMessage"])
 
             # continue querying the cloud
@@ -117,10 +114,10 @@ class QueryAgent:
 
                 # response is not in the correct format
                 if not retrieved_id:
-                    self.messages.append(self._get_regen_id_msg())
+                    self.messages.append(self.__get_regen_id_msg())
 
                 # validate the IDs
-                elif self.validate_id(tf_type=tf_type, id=retrieved_id):
+                elif self.__validate_id(tf_type=tf_type, id=retrieved_id):
                     return AgentResponse.SUCCESS, self.query_chain
 
         self.query_chain.reset_api_chain()
@@ -131,7 +128,7 @@ class QueryAgent:
         Run the cloud query commands given by `gpt_response`.
         Append the cloud responses in self.messages as the tool call responses.
         """
-        cloud_api_call_list, raw_api_list = self._get_api_call_list(
+        cloud_api_call_list, raw_api_list = self.get_api_call_list(
             gpt_response["tool_calls"]
         )
         failed_api = []
@@ -157,7 +154,9 @@ class QueryAgent:
             cloud_response = result.stdout if success else result.stderr
             # truncate the message to avoid exceeding limit
             cloud_response = (
-                "" if len(cloud_response) > GPT_MGS_MAXLEN else cloud_response
+                cloud_response[: Config["GPT_MSG_MAXLEN"]]
+                if len(cloud_response) > Config["GPT_MSG_MAXLEN"]
+                else cloud_response
             )
             print_info("Cloud response:")
             print(cloud_response)
@@ -183,26 +182,26 @@ class QueryAgent:
 
         for i in failed_api:
             self.messages.append(
-                self._get_argerr_msg(gpt_response["tool_calls"][i]["type"])
+                self.__get_argerr_msg(gpt_response["tool_calls"][i]["type"])
             )
 
-    def retrieve_id(self):
+    def retrieve_id(self, gpt_response: dict, target_id: str):
         raise NotImplementedError
 
-    def validate_id(self, tf_type: str, id: str, path="."):
+    def __validate_id(self, tf_type: str, id: str, path="cache"):
         """
         Validate the IDs by importing the resources in Terraform.
         If failed, append the error message in self.messages.
         """
-        self._gen_import_tffile(tf_type=tf_type, id=id, path=path)
-        import_err = self._run_tfimport(path)
+        self.__gen_import_tffile(tf_type=tf_type, id=id, path=path)
+        import_err = self.__run_tfimport(path)
         if not import_err:
             return True
         import_err_msg = {"role": "user", "content": import_err}
         self.messages.append(import_err_msg)
         return False
 
-    def _gen_import_tffile(self, tf_type: str, id: str, path="."):
+    def __gen_import_tffile(self, tf_type: str, id: str, path="cache"):
         # remove previous import test files
         (
             os.remove(os.path.join(path, "imported.tf"))
@@ -215,18 +214,18 @@ class QueryAgent:
             else None
         )
 
-        file = self._import_content(tf_type, id)
+        file = self.import_content(tf_type, id)
         with open(os.path.join(path, "import.tf"), "w") as f:
             f.write(file)
 
-    def _import_content(self):
+    def import_content(self, tf_type: str, id: str):
         """
         Return the cloud-specific Terraform import content.
         Should include the provider block and import block.
         """
         raise NotImplementedError
 
-    def _run_tfimport(self, path="."):
+    def __run_tfimport(self, path="cache"):
         print_info("Running terraform import test")
         if not os.path.exists(os.path.join(path, ".terraform")):
             subprocess.run(
@@ -256,21 +255,21 @@ class QueryAgent:
             return result.stderr
         return None
 
-    def _print_gpt_response(self, response: dict):
+    def __print_gpt_response(self, response: dict):
         print_info("Chat response:")
         print(response["chat"]) if response["chat"] else None
-        api_call_list, _ = self._get_api_call_list(response["tool_calls"])
+        api_call_list, _ = self.get_api_call_list(response["tool_calls"])
         for api_call in api_call_list:
             print("API call:", api_call)
 
-    def _get_api_call_list(self):
+    def get_api_call_list(self, tool_calls: list):
         """
         Construct the full API call list from the tool calls.
         @return: list of full API calls, list of raw API calls without arguments.
         """
         raise NotImplementedError
 
-    def _get_init_msg(self, tf_type: str, res_cnst_msg: str, IDschema: str):
+    def __get_init_msg(self, tf_type: str, res_cnst_msg: str, IDschema: str):
         """
         @param res_cnst_msg: message to describe the resource constraint in cloud query.
         E.g. 'in my resource group {group_name}' for Azure;
@@ -296,13 +295,13 @@ class QueryAgent:
             ),
         ]
 
-    def _get_regen_id_msg(self):
+    def __get_regen_id_msg(self):
         return HumanMessage(
             content="Your retrieved IDs are not in the correct format. \
             Please provide the IDs correctly strictly following the format <ID>\\n."
         )
 
-    def _get_argerr_msg(self, tool_name: str):
+    def __get_argerr_msg(self, tool_name: str):
         req_args = []
         for tool in self.tools:
             if tool["function"]["name"] == tool_name:

@@ -13,7 +13,7 @@ class GoogleQueryAgent(QueryAgent):
     def add_tools(self, cmds: list, cmd_tool_dict: dict, category: str):
         super().add_tools(cmds, cmd_tool_dict, "gcloud " + category)
 
-    def main_loop(self, tf_type: str, target_id: str, timeout=8):
+    def main_loop(self, tf_type: str, target_id: str):
         self.query_chain = GoogleQueryRule(tf_type, target_id)
         id_schema = self.query_chain.get_query_IDschema(self.project)
         return super().main_loop(
@@ -23,10 +23,9 @@ class GoogleQueryAgent(QueryAgent):
             id_schema=id_schema,
             res_cnst_msg=f"in my project {
                 self.project} in region {self.region}",
-            timeout=timeout,
         )
 
-    def _get_api_call_list(self, tool_calls: list):
+    def get_api_call_list(self, tool_calls: list):
         api_call_list = []
         raw_api_list = []
         for tool_call in tool_calls:
@@ -47,7 +46,7 @@ class GoogleQueryAgent(QueryAgent):
                 return id
         return None
 
-    def _import_content(self, tf_type: str, id: str):
+    def import_content(self, tf_type: str, id: str):
         return f"""provider "google" {{
     project = "{self.project}"
     region = "{self.region}"

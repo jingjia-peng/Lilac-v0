@@ -51,9 +51,9 @@ class GoogleQueryRule(QueryRule):
         self = GoogleQueryRule(
             tftype=data["tftype"], target_id=data["targetID"], load=True
         )
-        return self._load_helper(data)
+        return self.load_helper(data)
 
-    def _post_process(self):
+    def post_process(self):
         """
         Google specific post processing to of ID schema.
         1. whole ID -> `ID`
@@ -62,7 +62,7 @@ class GoogleQueryRule(QueryRule):
         """
         # extract schema of target ID
         # if we can directly extract target ID from the last response, store in IDschemas
-        self._extract_id_schema("ID", self.targetID)
+        self.extract_id_schema("ID", self.targetID)
 
         # ID is not directly extractable from response, need to infer
         if "ID" not in self.IDschemas:
@@ -70,7 +70,7 @@ class GoogleQueryRule(QueryRule):
             if not self.targetID.startswith("projects/"):
                 components = self.targetID.split("/")
                 for i in range(len(components)):
-                    self._extract_id_schema(f"component_{i}", components[i])
+                    self.extract_id_schema(f"component_{i}", components[i])
 
             # check partially combined ID components
             else:
@@ -79,7 +79,7 @@ class GoogleQueryRule(QueryRule):
                 for i in range(len(components) // 2, 0, -1):
                     # projects/iac-lifting-test/global/
                     base_id = "/".join(components[: i * 2 + 1])
-                    self._extract_id_schema("baseID", base_id)
+                    self.extract_id_schema("baseID", base_id)
                     if "baseID" in self.IDschemas:
                         break
 
@@ -89,7 +89,7 @@ class GoogleQueryRule(QueryRule):
                     components[i * 2 + 1 :][1::2],
                 )
                 for i in range(len(comp_keys)):
-                    self._extract_id_schema(f"child_{i}_{comp_keys[i]}", comp_vals[i])
+                    self.extract_id_schema(f"child_{i}_{comp_keys[i]}", comp_vals[i])
 
         # extract schema of each round arguments
         for round in range(1, len(self.api_chain)):
@@ -98,7 +98,7 @@ class GoogleQueryRule(QueryRule):
                     # check previous round response
                     for prev_api_call_info in self.api_chain[-round - 1]:
                         response = json.loads(prev_api_call_info.response)
-                        schemas = self._extract_arg_schemas(arg.val, response, [])
+                        schemas = self.extract_arg_schemas(arg.val, response, [])
                         if len(schemas) > 0:
                             api_call_info.add_schemas(
                                 arg.name, prev_api_call_info.api_call, schemas
@@ -106,18 +106,16 @@ class GoogleQueryRule(QueryRule):
 
         self._processed = True
 
-    def _extract_arg_schemas(
-        self, arg_val: str, response, schema_list: list, prefix=""
-    ):
+    def extract_arg_schemas(self, arg_val: str, response, schema_list: list, prefix=""):
         if isinstance(response, list):
             for i, item in enumerate(response):
-                self._extract_arg_schemas(
+                self.extract_arg_schemas(
                     arg_val, item, schema_list, prefix + "[" + str(i) + "]"
                 )
         elif isinstance(response, dict):
             for k, v in response.items():
                 if isinstance(v, dict) or isinstance(v, list):
-                    self._extract_arg_schemas(arg_val, v, schema_list, prefix + "." + k)
+                    self.extract_arg_schemas(arg_val, v, schema_list, prefix + "." + k)
                 elif self._is_match(v, arg_val):
                     schema = prefix + "." + k
                     if schema not in schema_list:
@@ -136,5 +134,5 @@ class GoogleQueryRule(QueryRule):
                 return True
         return False
 
-    def _APIInfo(self, api_call: str, args: dict | list[APIArg], response: str):
+    def APIInfo(self, api_call: str, args: dict | list[APIArg], response: str):
         return GoogleAPIInfo(api_call, args, response)

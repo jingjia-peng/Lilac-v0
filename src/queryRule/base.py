@@ -29,12 +29,12 @@ class APIInfo:
     def __init__(self, api_call: str, args: dict | list[APIArg], response: str):
         self.api_call = api_call
         if isinstance(args, dict):
-            self.args = self._init_args_schema(args)  # list of APIArg
+            self.args = self.__init_args_schema(args)  # list of APIArg
         else:
             self.args = args
         self.response = response  # json string of cloud response
 
-    def _init_args_schema(self, args: dict):
+    def __init_args_schema(self, args: dict):
         schema_list = []
         for arg_name, arg_val in args.items():
             schema_list.append(APIArg(arg_name, arg_val))
@@ -65,7 +65,7 @@ class QueryRule:
         self.targetID = target_id
         self.IDformat = ""
         if not load:
-            self.IDformat = self._extract_id_format(
+            self.IDformat = self.__extract_id_format(
                 cloud_type, example_id, example_schema
             )
         self.IDschemas = {}
@@ -73,7 +73,9 @@ class QueryRule:
         self.current_round = -1
         self._processed = False
 
-    def _extract_id_format(self, cloud_type: str, example_id: str, example_schema: str):
+    def __extract_id_format(
+        self, cloud_type: str, example_id: str, example_schema: str
+    ):
         """
         Extract general schema of target ID.
         """
@@ -115,7 +117,7 @@ class QueryRule:
         raise NotImplementedError
 
     def round_update(self, api_call: str, args: dict, response: str, round: int):
-        api_call_info = self._APIInfo(api_call, args, response)
+        api_call_info = self.APIInfo(api_call, args, response)
         if round > self.current_round:
             self.current_round = round
             self.api_chain.append([api_call_info])
@@ -126,7 +128,7 @@ class QueryRule:
     def load(self):
         raise NotImplementedError
 
-    def _load_helper(self, data):
+    def load_helper(self, data):
         # load from dumped data which is post-processed
         self._processed = True
 
@@ -148,16 +150,16 @@ class QueryRule:
                         for schema in arg["schema"]
                     ]
                     args.append(APIArg(arg["name"], arg["val"], schema_list))
-                api_call_info = self._APIInfo(
+                api_call_info = self.APIInfo(
                     api_call_info["api_call"], args, api_call_info["response"]
                 )
                 round_data.append(api_call_info)
             self.api_chain.append(round_data)
         return self
 
-    def dump(self, path: str, name: str):
+    def dump(self, path: str, name: str, verbose=True):
         if not self._processed:
-            self._post_process()
+            self.post_process()
         data = {
             "tftype": self.tftype,
             "targetID": self.targetID,
@@ -201,10 +203,13 @@ class QueryRule:
 
         with open(os.path.join(path, name + "-querychain.json"), "w") as f:
             json.dump(data, f, indent=2)
+        if verbose:
+            print_info(f"Query chain of {self.tftype} dumped to {name}-querychain.json")
+            print(self)
 
     def __str__(self) -> str:
         if not self._processed:
-            self._post_process()
+            self.post_process()
         ret = "===== Query Rule =====\n"
         ret += f"TF type: {self.tftype}\n"
         ret += f"Target ID: {self.targetID}\n"
@@ -225,20 +230,20 @@ class QueryRule:
                         ret += f"      {schema.api_call}: {schema.schema}\n"
         return ret
 
-    def _post_process(self):
+    def post_process(self):
         """
         Postprocessing is called when the query chain is complete.
         It extracts all possible schemas of arguments and target ID from previous response.
         """
         raise NotImplementedError
 
-    def _extract_id_schema(self, schema_key: str, target_val: str):
+    def extract_id_schema(self, schema_key: str, target_val: str):
         """
         Helper to extract each part of the ID schema and add to IDschemas.
         """
         for round_list in self.api_chain:
             for api_call in round_list:
-                schemas = self._extract_arg_schemas(
+                schemas = self.extract_arg_schemas(
                     target_val, json.loads(api_call.response), []
                 )
                 for schema in schemas:
@@ -248,13 +253,13 @@ class QueryRule:
                     elif id_schema not in self.IDschemas[schema_key]:
                         self.IDschemas[schema_key].append(id_schema)
 
-    def _extract_arg_schemas(self):
+    def extract_arg_schemas(self):
         """
         Try to extract schema of argument from response, return None if not found.
         """
         raise NotImplementedError
 
-    def _APIInfo(self):
+    def APIInfo(self):
         """
         Return the APIInfo object of the specific cloud, e.g. AzureAPIInfo, GoogleAPIInfo.
         """

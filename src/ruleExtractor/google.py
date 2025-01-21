@@ -3,7 +3,13 @@ import json
 import shutil
 import subprocess
 
-from utils import print_info, print_error, testGenerator
+from utils import (
+    Config,
+    print_info,
+    print_error,
+    generate_unit_test,
+    generate_incremental_tests,
+)
 from queryAgent import AgentResponse, GoogleQueryAgent
 from cloudAPImanager import GoogleAPIManager
 
@@ -11,9 +17,13 @@ from .base import RuleExtractor
 
 
 class GoogleRuleExtractor(RuleExtractor):
-    def __init__(self, project="iac-lifting-test", region="us-central1"):
-        self.project = project
-        self.region = region
+    def __init__(self):
+        self.project = Config["project"]
+        if self.project is None:
+            raise ValueError("Google project not set in global-config.yml")
+        self.region = Config["region"]
+        if self.region is None:
+            raise ValueError("Google region not set in global-config.yml")
         super().__init__(
             query_agent=GoogleQueryAgent(self.project, self.region),
             api_manager=GoogleAPIManager(),
@@ -33,7 +43,7 @@ class GoogleRuleExtractor(RuleExtractor):
 
             print_info(f"Generating unit test for {tf_type}")
             self.logger.warning(f"Generating unit test for {tf_type}")
-            ok = testGenerator.generate_unit_test(
+            ok = generate_unit_test(
                 tf_type=tf_type,
                 cloud="Google",
                 ref_file_path=ref_file,
@@ -52,7 +62,7 @@ class GoogleRuleExtractor(RuleExtractor):
         """
         Run incremental test in `testdir`
         """
-        test_infos = testGenerator.generate_incremental_tests(testdir, verbose=True)
+        test_infos = generate_incremental_tests(testdir, verbose=True)
 
         try:
             for i, (test_path, test_resource) in enumerate(test_infos):

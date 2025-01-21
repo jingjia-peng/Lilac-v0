@@ -19,7 +19,7 @@ class AzureAPIManager(CloudAPIManager):
 
     def load_cleaned_api_docs(self):
         super().load_cleaned_api_docs(
-            api_tree_merged_file=os.path("cache", "az_api_tree_merged.yml"),
+            api_tree_merged_file=os.path.join("cache", "az_api_tree_merged.yml"),
             clean_dir=os.path.join("cli-docs", "azure-cli-docs-cleaned"),
             cmd_prefix="az ",
         )

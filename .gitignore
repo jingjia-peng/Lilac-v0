@@ -8,6 +8,18 @@ src/lilac.egg-info/
 .ruff_cache/
 cache/*
 
+# intermediate data
+*.log
+incremental_test/
+*.json
+
+# terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+graph.dot
+
 # sensitive data
 config/api-config.yml
 
