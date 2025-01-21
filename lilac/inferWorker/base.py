@@ -22,16 +22,13 @@ class InferWorker:
         self.tfid_map = defaultdict(set)  # key: IDSchema, value: ID value
 
         logging.basicConfig(
-            level=logging.WARNING,
+            level=logging.INFO,
             handlers=[
-                logging.FileHandler("infer.log", "w", "utf-8"),
+                logging.FileHandler(os.path.join("cache", "infer.log"), "w", "utf-8"),
                 logging.StreamHandler(),
             ],
         )
         self.logger = logging.getLogger(__name__)
-
-        # suppress logging
-        self.logger.disabled = True
 
     def prepare_infer_rules(self):
         raise NotImplementedError

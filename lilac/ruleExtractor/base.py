@@ -12,17 +12,13 @@ class RuleExtractor:
         self.cmd_tool_dict = self.cloudAPImanager.get_cmd_dict()
 
         logging.basicConfig(
-            level=logging.WARNING,
+            level=logging.INFO,
             handlers=[
-                logging.FileHandler("train.log", "w", "utf-8"),
+                logging.FileHandler(os.path.join("cache", "train.log"), "w", "utf-8"),
                 logging.StreamHandler(),
             ],
         )
         self.logger = logging.getLogger(__name__)
-        self.tested_types = set()
-
-        # suppress logging
-        self.logger.disabled = True
 
     def schedule_tests(self, test_dir_list: list, cleanup=True):
         """

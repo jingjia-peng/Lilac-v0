@@ -106,7 +106,6 @@ class GoogleRuleExtractor(RuleExtractor):
                     if agent_response == AgentResponse.SUCCESS:
                         print_info(agent_response)
                         query_chain.dump(testdir, test_resource)
-                        self.tested_types.add(tf_type)
                         break
 
                     print_error(agent_response)

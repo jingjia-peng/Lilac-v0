@@ -6,6 +6,14 @@ from lilac.inferWorker import AzureInferWorker
 from lilac.ruleExtractor import AzureRuleExtractor
 
 if __name__ == "__main__":
+
+    # prepare for logging
+    os.makedirs("cache", exist_ok=True)
+    if os.path.exists(os.path.join("cache", "train.log")):
+        os.remove(os.path.join("cache", "train.log"))
+    if os.path.exists(os.path.join("cache", "infer.log")):
+        os.remove(os.path.join("cache", "infer.log"))
+
     parser = argparse.ArgumentParser(
         prog="lilac",
         description="Lilac - Automated IaC lifting rule extraction (query) and utilization (lift)",
