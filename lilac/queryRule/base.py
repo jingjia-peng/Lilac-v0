@@ -2,11 +2,10 @@ import os
 import json
 from collections import namedtuple
 
+from utils import Config, print_info
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
-
-from utils import Config, print_info
 
 APISchema = namedtuple("APISchema", ["api_call", "schema"])
 

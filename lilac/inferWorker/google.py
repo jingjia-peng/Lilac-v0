@@ -2,8 +2,6 @@ import os
 import json
 import subprocess
 
-from jsonpath_ng import parse
-
 from utils import Config, print_info, print_cmd_result
 from inferRule import (
     InferRule,
@@ -13,6 +11,7 @@ from inferRule import (
     GoogleResponseInfo,
 )
 from queryRule import GoogleQueryRule
+from jsonpath_ng import parse
 
 from .base import InferWorker, LiftedInstance
 

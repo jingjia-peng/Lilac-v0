@@ -3,9 +3,8 @@ import logging
 import subprocess
 from collections import namedtuple, defaultdict
 
-from tabulate import tabulate
-
 from utils import print_info
+from tabulate import tabulate
 
 LiftedInstance = namedtuple("LiftedInstance", ["tftype", "id"])
 ImportInstance = namedtuple("ImportInstance", ["tftype", "name", "id"])

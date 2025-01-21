@@ -5,7 +5,7 @@
 ## Setup
 
 ```shell
-python -m venv lilac
-source lilac/bin/activate
+python -m venv env
+source env/bin/activate
 pip install -e .
 ```

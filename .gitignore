@@ -1,9 +1,9 @@
 # virtual environments
-lilac/
+env/
 
 # cache
 __pycache__/
-src/lilac.egg-info/
+lilac.egg-info/
 .vscode/
 .ruff_cache/
 cache/*
