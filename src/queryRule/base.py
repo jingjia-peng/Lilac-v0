@@ -157,7 +157,7 @@ class QueryRule:
             self.api_chain.append(round_data)
         return self
 
-    def dump(self, path: str, name: str, verbose=True):
+    def dump(self, path: str, name: str):
         if not self._processed:
             self.post_process()
         data = {
@@ -203,9 +203,9 @@ class QueryRule:
 
         with open(os.path.join(path, name + "-querychain.json"), "w") as f:
             json.dump(data, f, indent=2)
-        if verbose:
-            print_info(f"Query chain of {self.tftype} dumped to {name}-querychain.json")
-            print(self)
+
+        print_info(f"Query chain of {self.tftype} dumped to {name}-querychain.json")
+        print(self)
 
     def __str__(self) -> str:
         if not self._processed:

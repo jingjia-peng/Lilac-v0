@@ -78,7 +78,7 @@ def clean_output_tffile(basefiles: list[str]):
         basefiles.remove(file)
 
 
-def generate_incremental_tests(basedir: str, verbose=False):
+def generate_incremental_tests(basedir: str):
     """
     Generate incremental test cases based on the basefile.
     Return a list of test info (testdir, added_resource)
@@ -92,8 +92,7 @@ def generate_incremental_tests(basedir: str, verbose=False):
 
     partial_orders = get_partial_orders(basedir)
     total_orders = toposort(partial_orders)
-    if verbose:
-        print_total_orders(total_orders)
+    print_total_orders(total_orders)
 
     basefiles = [
         os.path.join(dp, f)

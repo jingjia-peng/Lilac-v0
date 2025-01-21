@@ -21,7 +21,7 @@ class GoogleRuleExtractor(RuleExtractor):
         """
         Run incremental test in `testdir`
         """
-        test_infos = generate_incremental_tests(testdir, verbose=True)
+        test_infos = generate_incremental_tests(testdir)
         agent_retry = Config["query_loop_max_retry"]
 
         try:

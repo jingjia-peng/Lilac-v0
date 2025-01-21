@@ -26,13 +26,12 @@ class AzureInferWorker(InferWorker):
         self.location = location
         super().__init__(infer_rule=InferRule(AzureResponseInfo))
 
-    def prepare_infer_rules(self, query_rule_paths: list, verbose=False):
+    def prepare_infer_rules(self, query_rule_paths: list):
         for path in query_rule_paths:
             query_rule = AzureQueryRule.load(path)
             self.infer_rule.add_query_rule(query_rule)
-        if verbose:
-            print_info(self.infer_rule)
-            self.logger.info(self.infer_rule)
+        print_info(self.infer_rule)
+        self.logger.info(self.infer_rule)
 
     def _print_init_lifting(self):
         print_info(

@@ -18,7 +18,7 @@ class AzureRuleExtractor(RuleExtractor):
         )
 
     def run_unit_test(self, testdir: str, cleanup):
-        test_infos = generate_incremental_tests(testdir, verbose=True)
+        test_infos = generate_incremental_tests(testdir)
         agent_retry = Config["query_loop_max_retry"]
         print_info(f"Running incremental test in {testdir}")
         self.logger.info(f"Running incremental test in {testdir}")

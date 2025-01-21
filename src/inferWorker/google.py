@@ -33,13 +33,12 @@ class GoogleInferWorker(InferWorker):
                             self.project_id}..."
         )
 
-    def prepare_infer_rules(self, query_rule_paths: list, verbose=False):
+    def prepare_infer_rules(self, query_rule_paths: list):
         for path in query_rule_paths:
             query_rule = GoogleQueryRule.load(path)
             self.infer_rule.add_query_rule(query_rule)
-        if verbose:
-            print_info(self.infer_rule)
-            self.logger.info(self.infer_rule)
+        print_info(self.infer_rule)
+        self.logger.info(self.infer_rule)
 
     def _populate_top_api_queue(self, api_queue):
         print_info(
