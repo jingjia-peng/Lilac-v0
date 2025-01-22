@@ -1,5 +1,5 @@
-model: gpt-4o
-api_version: 2023-03-15-preview
+model: choose-your-model
+api_version: you-api-version
 api_key: your-api-key
 azure_endpoint: your-azure-endpoint
 organization: your-azure-openai-organization-id

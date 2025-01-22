@@ -41,6 +41,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "-c",
+        "--cleanup",
+        action="store_true",
+        help="Clean up the infrasturcture after rule extraction (query)",
+    )
+
+    parser.add_argument(
         "-r",
         "--rule-dir",
         nargs="+",
@@ -65,32 +72,40 @@ if __name__ == "__main__":
         if args.test_dir:
             test_dirs = [os.path.join("test", d) for d in args.test_dir]
             ruleExtractor = AzureRuleExtractor()
-            ruleExtractor.schedule_tests(test_dirs)
+            ruleExtractor.schedule_tests(test_dirs, args.cleanup)
         else:
             print_error("[WARNNING] No test directory provided")
 
     elif args.lift:
         if args.rule_dir:
             rule_dirs = [os.path.join("test", d) for d in args.rule_dir]
-            rule_files = [
-                os.path.join(rule_dir, f)
-                for rule_dir in rule_dirs
-                for f in os.listdir(rule_dir)
-                if f.endswith(".json")
-            ]
-            if args.resource_group:
-                inferController = AzureInferWorker(args.resource_group)
-                inferController.prepare_infer_rules(rule_files)
-                inferController.lifting_inference()
 
-                save_path = args.save_path
-                if not save_path:
-                    print_error(
-                        "[WARNNING] No save path provided, default to output/lifted.tf"
-                    )
-                    save_path = os.path.join("output", "lifted.tf")
-                inferController.save_lifted_instances(save_path)
-            else:
-                print_error("[WARNNING] No resource group provided")
         else:
-            print_error("[WARNNING] No rule directory provided")
+            print_error(
+                "[WARNNING] No rule directory provided, using all rules files under test/"
+            )
+            rule_dirs = [
+                d for d in os.listdir("test") if os.path.isdir(os.path.join("test", d))
+            ]
+
+        rule_files = [
+            os.path.join("test", rule_dir, f)
+            for rule_dir in rule_dirs
+            for f in os.listdir(os.path.join("test", rule_dir))
+            if f.endswith(".json")
+        ]
+
+        if args.resource_group:
+            inferController = AzureInferWorker(args.resource_group)
+            inferController.prepare_infer_rules(rule_files)
+            inferController.lifting_inference()
+
+            save_path = args.save_path
+            if not save_path:
+                print_error(
+                    "[WARNNING] No save path provided, default to output/lifted.tf"
+                )
+                save_path = os.path.join("output", "lifted.tf")
+            inferController.save_lifted_instances(save_path)
+        else:
+            print_error("[WARNNING] No resource group provided")

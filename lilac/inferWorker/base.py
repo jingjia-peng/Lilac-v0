@@ -24,8 +24,7 @@ class InferWorker:
         logging.basicConfig(
             level=logging.INFO,
             handlers=[
-                logging.FileHandler(os.path.join("cache", "infer.log"), "w", "utf-8"),
-                logging.StreamHandler(),
+                logging.FileHandler(os.path.join("cache", "infer.log"), "w", "utf-8")
             ],
         )
         self.logger = logging.getLogger(__name__)

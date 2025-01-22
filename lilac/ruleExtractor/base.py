@@ -14,8 +14,7 @@ class RuleExtractor:
         logging.basicConfig(
             level=logging.INFO,
             handlers=[
-                logging.FileHandler(os.path.join("cache", "train.log"), "w", "utf-8"),
-                logging.StreamHandler(),
+                logging.FileHandler(os.path.join("cache", "train.log"), "w", "utf-8")
             ],
         )
         self.logger = logging.getLogger(__name__)
