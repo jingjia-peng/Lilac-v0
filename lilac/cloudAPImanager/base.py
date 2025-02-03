@@ -263,6 +263,12 @@ class CloudAPIManager:
         select_query = self.__get_select_message(tf_type, category_info, cloud_type)
 
         selected_category = self.agent.invoke(select_query).strip('"')
+
+        # for make-up selection, just return the first category
+        if selected_category not in category_info:
+            print_info(f"Selected category: {selected_category} not in retrieved docs")
+            return category_info.keys()[0]
+
         print_info(f"Selected category: {selected_category}")
         return selected_category
 
