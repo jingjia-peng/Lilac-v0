@@ -16,7 +16,7 @@ class AgentResponse(Enum):
     RESELECT = 2
 
 
-class QueryAgent:
+class QueryWorker:
     def __init__(self):
         self.agent = AzureChatOpenAI(
             model=Config["model"],

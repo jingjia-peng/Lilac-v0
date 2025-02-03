@@ -1,10 +1,10 @@
 from lilac.utils import Config
 from lilac.queryRule import AzureQueryRule
 
-from .base import QueryAgent
+from .base import QueryWorker
 
 
-class AzureQueryAgent(QueryAgent):
+class AzureQueryWorker(QueryWorker):
     def __init__(self):
         super().__init__()
         self.subscription_id = Config["azure_subscription_id"]

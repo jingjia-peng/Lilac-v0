@@ -4,7 +4,7 @@ import shutil
 import subprocess
 
 from lilac.utils import Config, print_info, print_error, generate_incremental_tests
-from lilac.queryAgent import AgentResponse, AzureQueryAgent
+from lilac.queryWorker import AgentResponse, AzureQueryWorker
 from lilac.cloudAPImanager import AzureAPIManager
 
 from .base import RuleExtractor
@@ -13,7 +13,7 @@ from .base import RuleExtractor
 class AzureRuleExtractor(RuleExtractor):
     def __init__(self):
         super().__init__(
-            query_agent=AzureQueryAgent(),
+            query_agent=AzureQueryWorker(),
             api_manager=AzureAPIManager(),
         )
 

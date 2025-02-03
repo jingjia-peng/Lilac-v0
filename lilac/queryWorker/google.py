@@ -1,10 +1,10 @@
 from lilac.utils import Config
 from lilac.queryRule import GoogleQueryRule
 
-from .base import QueryAgent
+from .base import QueryWorker
 
 
-class GoogleQueryAgent(QueryAgent):
+class GoogleQueryWorker(QueryWorker):
     def __init__(self):
         super().__init__()
         self.project = Config["google_project"]

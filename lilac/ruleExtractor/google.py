@@ -4,7 +4,7 @@ import shutil
 import subprocess
 
 from lilac.utils import Config, print_info, print_error, generate_incremental_tests
-from lilac.queryAgent import AgentResponse, GoogleQueryAgent
+from lilac.queryWorker import AgentResponse, GoogleQueryWorker
 from lilac.cloudAPImanager import GoogleAPIManager
 
 from .base import RuleExtractor
@@ -13,7 +13,7 @@ from .base import RuleExtractor
 class GoogleRuleExtractor(RuleExtractor):
     def __init__(self):
         super().__init__(
-            query_agent=GoogleQueryAgent(),
+            query_agent=GoogleQueryWorker(),
             api_manager=GoogleAPIManager(),
         )
 
